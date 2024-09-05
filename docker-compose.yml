@@ -6,10 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        NODE_VERSION: 20  # Specify the Node.js version you want
+        NODE_VERSION: 21  # Specify the Node.js version you want
     image: asktomentor_app_auth
     ports:
-      - "6001:6000"
+      - "6000:6000"
       # - "5001:5000"
       # - "5002:5000"
     deploy:
