@@ -17,7 +17,9 @@ COPY . .
 
 # Build the application (if needed)
 # RUN npm run build
-
+# Generate RSA keys using openssl
+RUN openssl genrsa -out private.key 2048 && \
+    openssl rsa -in private.key -pubout -out public.key
 # Expose the port your application will run on
 EXPOSE 6000
 
