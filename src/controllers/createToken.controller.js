@@ -63,7 +63,7 @@ const createToken =  async(req, res) => {
             email,
             ip,
             jwtId: uniqueId,
-            originUrl: originUrl || "railkafe",
+            originUrl: originUrl || "asktomentor",
             platform,
             role,
             user_id,
@@ -74,7 +74,7 @@ const createToken =  async(req, res) => {
             algorithm: "HS256",
             audience: data.originUrl,
             expiresIn: tokenExpiry, 
-            issuer: basicConfigurationObject.JWT_ISSSUER,
+            issuer: basicConfigurationObject.JWT_PUBLIC_KEY_ISSUER,
             jwtid: uniqueId
         };
 
