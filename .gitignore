@@ -5,3 +5,5 @@ package-lock.json
 dist
 .eslintrc.js
 testing.txt
+private.key
+public.key
