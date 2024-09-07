@@ -1,8 +1,6 @@
 "use strict";
 
-const {
-    Session
-} = require("../models/index.js");
+const Session = require("../models/session.model");
 
 const storeSession = async(data, jwtOption, expiry_hr, milliseconds) => {
     console.log("storeSession working", expiry_hr, milliseconds);
@@ -13,15 +11,15 @@ const storeSession = async(data, jwtOption, expiry_hr, milliseconds) => {
             email: data.email,
             enabled: true,
             encrypt: data.encrypt,
-            expiry_hr,
-            expiry_time: milliseconds + currentTime,
+            exipryHr: expiry_hr,
+            expiryTime: milliseconds + currentTime,
             ip: data.ip,
-            jwt_id: jwtOption.jwtid,
-            original_url: data.originUrl,
+            jwtId: jwtOption.jwtid,
+            originalUrl: data.originUrl,
             platform: data.platform,
             role: data.role,
             user_agent: data.userAgent,
-            user_id: data.user_id
+            userId: data.userId
         };
 
         console.log(obj);

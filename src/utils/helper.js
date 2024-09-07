@@ -26,11 +26,11 @@ class Helper{
             const initVector = basicConfigurationObject.ENCRYPT_AND_DECRYPT_KEY_INIVECTOR_KEY;
             const Securitykey = basicConfigurationObject.ENCRYPT_AND_DECRYPT_KEY_SECURITY_KEY;
     
-            // console.log({
-            //     algorithm,
-            //     initVector,
-            //     Securitykey
-            // });
+            console.log({
+                algorithm,
+                initVector,
+                Securitykey
+            });
             const cipher = crypto.createCipheriv(algorithm, Securitykey, initVector);
             let encryptedData = cipher.update(JSON.stringify(messages), "utf-8", "hex");
     

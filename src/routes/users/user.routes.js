@@ -6,7 +6,9 @@ const {
 
 const router = Router();
 
-const authenticateJwtMiddleware = require("../../middleware/authenticateJwtMiddleware.js");
+const  createToken = require( "../../controllers/createToken.controller.js");
+const  authenticate = require( "../../middleware/authenticateJwtMiddleware.js");
+const authorisationMiddleware = require("../../middleware/authorisationMiddleware.js");
 
 router.route("/").get((req, res) => {
     res.status(200).json({
@@ -14,4 +16,7 @@ router.route("/").get((req, res) => {
         status: "OK" 
     });
 });
+router.route("/createToken").post(createToken);
+router.route("/authenticate").post(authenticate);
+router.route("/authorize").post(authorisationMiddleware);
 module.exports =  router;

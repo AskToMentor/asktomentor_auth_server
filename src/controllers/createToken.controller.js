@@ -15,6 +15,7 @@ const storeSession = require("../utils/storeSession.js");
 
 const ShortUniqueId =  require("short-unique-id");
 const uid = new ShortUniqueId();
+const fs = require("fs");
 
 function convertStringToMilliseconds(timeString) {
     const match = timeString.match(/(\d+)([hms])/);
@@ -45,7 +46,7 @@ const createToken =  async(req, res) => {
     console.log("req body", req.body);
 
     try {
-        const user_id = req.body.user_id;
+        const userId = req.body.userId;
         const role = req.body.role;
         const ip = req.headers.ip;
         const email = req.body.email;
@@ -53,8 +54,10 @@ const createToken =  async(req, res) => {
 
         if (fieldValidator(role) || fieldValidator(userAgent)) throw new ApiError(statusCodeObject.HTTP_STATUS_BAD_REQUEST, errorAndSuccessCodeConfiguration.HTTP_STATUS_BAD_REQUEST, CommonMessage.ERROR_FIELD_REQUIRED);
 
-        if (fieldValidator(user_id) && fieldValidator(email)) throw new ApiError(statusCodeObject.HTTP_STATUS_BAD_REQUEST, errorAndSuccessCodeConfiguration.HTTP_STATUS_BAD_REQUEST, CommonMessage.ERROR_FIELD_REQUIRED);
+        if (fieldValidator(userId) && fieldValidator(email)) throw new ApiError(statusCodeObject.HTTP_STATUS_BAD_REQUEST, errorAndSuccessCodeConfiguration.HTTP_STATUS_BAD_REQUEST, CommonMessage.ERROR_FIELD_REQUIRED);
 
+        const privateKey = fs.readFileSync("private.key", "utf8");
+        
         const originUrl = req.headers.originUrl;
         const platform = req.headers.platform;
         const uniqueId = uid.stamp(32);
@@ -66,15 +69,15 @@ const createToken =  async(req, res) => {
             originUrl: originUrl || "asktomentor",
             platform,
             role,
-            user_id,
-            userAgent
+            userAgent,
+            userId
         };
 
         const jwtOption = {
-            algorithm: "HS256",
+            algorithm: "RS256",
             audience: data.originUrl,
             expiresIn: tokenExpiry, 
-            issuer: basicConfigurationObject.JWT_PUBLIC_KEY_ISSUER,
+            issuer: "asktomentor",
             jwtid: uniqueId
         };
 
@@ -83,12 +86,12 @@ const createToken =  async(req, res) => {
         data.encrypt = encrypt;
         const token = jsonwebtoken.sign({
             encrypt
-        }, basicConfigurationObject.ACCESS_TOKEN_SECRET, jwtOption);
+        }, privateKey, jwtOption);
         const match = tokenExpiry.match(/\d/);
         const exipryHr = (match) ? Number(match[0]) : "";
         const milliseconds = convertStringToMilliseconds(tokenExpiry);
 
-        console.log("token", data, jwtOption, exipryHr, milliseconds);
+        // console.log("token", jwtOption, exipryHr, milliseconds);
 
         await storeSession(data, jwtOption, exipryHr, milliseconds);
 
