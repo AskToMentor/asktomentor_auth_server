@@ -2,9 +2,18 @@
 
 const RolesEnum = {
     ADMIN: 50,
-    READ_ONLY: 0,
-    USER: 1,
-    VENDOR: 2
+    MENTEE: 1,
+    MENTOR: 2,
+    READ_ONLY: 0
+};
+const RolesEnumNumber = {
+    0: "READ_ONLY",
+    1: "MENTEE",
+    2: "MENTOR",
+    50: "ADMIN"
 };
 
-export default RolesEnum;
+module.exports = {
+    RolesEnum,
+    RolesEnumNumber
+};

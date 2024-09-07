@@ -1,19 +1,19 @@
 "use strict";
 
 const {
-    basicConfigurationObject, CommonMessage, statusCodeObject, errorAndSuccessCodeConfiguration
+    CommonMessage, statusCodeObject, errorAndSuccessCodeConfiguration
 } = require("../utils/constants.js");
 const ApiError = require("../utils/apiError.js");
 const jsonwebtoken = require("jsonwebtoken");
 const helper = require("../utils/helper.js");
 const fieldValidator = require("../utils/fieldValidator.js");
-// const {
-//     User, Session
-// } = require("../models/index.js");
 const ApiResponse = require("../utils/apiSuccess.js");
+const fs = require("fs");
+const Session = require("../models/session.model");
+const User = require("../models/user.model");
 
 const authenticateJwtMiddleware =  async(req, res) => {
-    // console.log("authenticateJwtMiddleware", req.headers);
+    console.log("authenticateJwtMiddleware");
     const authHeader = req.headers.authorization;
     // const ip = req.headers.ip;
 
@@ -25,16 +25,19 @@ const authenticateJwtMiddleware =  async(req, res) => {
         if (tokenParts.length !== 2 || tokenParts[0].toLowerCase() !== "bearer") throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Invalid Authorization header format");
         
         const token = tokenParts[1];
+
+        // console.log("token", token);
+        
         const currentTime = new Date().getTime();
+        const publicKey = fs.readFileSync("public.key", "utf8");
         // Verify the token using the secret key (replace 'your_secret_key' with your actual secret key)
-        const decoded = jsonwebtoken.verify(token, basicConfigurationObject.JWT_PUBLIC_KEY_ISSUER, {
+        const decoded = jsonwebtoken.verify(token, publicKey, {
             algorithms: [ "RS256" ] 
         });
 
         // console.log({
         //     authHeader,
         //     decoded,
-        //     ip,
         //     tokenParts
         // });
 
@@ -48,26 +51,23 @@ const authenticateJwtMiddleware =  async(req, res) => {
         // Attach the decoded payload to the request for later use in routes
         delete encryptObj.originalUrl;
 
-        // const user = await User.findOne({
-        //     where: {
-        //         user_id: encryptObj.user_id
-        //     }
-        // });
+        const user = await User.findOne({
+            userId: encryptObj.userId
+        });
 
-        // if (user.account_blocked || user.account_blocked === "1") throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Account Blocked");
+        if (user.accountBlocked || user.accountBlocked === "1") throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Account Blocked");
 
-        // const SessionObj =  await Session.findOne({
-        //     where: {
-        //         jwt_id: encryptObj.jwtId,
-        //         user_id: encryptObj.user_id
-        //     }
-        // });
+        const SessionObj =  await Session.findOne({
+            jwtId: encryptObj.jwtId,
+            userId: encryptObj.userId
         
-        // if (fieldValidator(SessionObj)) throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Session Expired");
+        });
         
-        // if (!SessionObj.enabled) throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Session Expired");
+        if (fieldValidator(SessionObj)) throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Session Expired");
+        
+        if (!SessionObj.enabled) throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Session Expired");
 
-        // if (currentTime > SessionObj.expiry_time) throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Session Expired");
+        if (currentTime > SessionObj.expiry_time) throw new ApiError(statusCodeObject.HTTP_STATUS_UNAUTHORIZED, errorAndSuccessCodeConfiguration.HTTP_STATUS_UNAUTHORIZED, "Session Expired");
 
         return res.status(200).json(
             new ApiResponse(statusCodeObject.HTTP_STATUS_OK, errorAndSuccessCodeConfiguration.HTTP_STATUS_OK,

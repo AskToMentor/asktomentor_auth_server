@@ -2,7 +2,14 @@
 "use strict";
 
 const mongoose = require("mongoose");
-const RolesEnum = require("../../utils/roles.js");
+const RolesEnum = require("../utils/roles.js");
+const {
+    basicConfigurationObject, CommonMessage
+} = require( "../utils/constants.js");
+const CryptoJS = require("crypto-js");
+
+const ShortUniqueId = require("short-unique-id");
+const uid = new ShortUniqueId();
 const userSchema = new mongoose.Schema(
     {
         accountApprovedTime: {
@@ -36,10 +43,10 @@ const userSchema = new mongoose.Schema(
         countryName: {
             type: String
         },
-        dayNumber: {
-            required: true,
-            type: Number 
-        },
+        // dayNumber: {
+        //     required: true,
+        //     type: Number 
+        // },
         deleteTime: {
             type: Number
         },
@@ -47,6 +54,9 @@ const userSchema = new mongoose.Schema(
             type: String
         },
         dialCode: {
+            type: String
+        },
+        email: {
             required: true,
             type: String
         },
@@ -82,29 +92,46 @@ const userSchema = new mongoose.Schema(
         loginCount: {
             type: Number
         },
-        monthNumber: {
-            required: true,
-            type: Number
-        }, 
-        phoneNumber: {
+        
+        password: {
             required: true,
             type: String
         },
+
+        phoneNumber: {
+            type: String
+        },
+
         pincode: {
             type: Number
         },
+
         profileImageUrl: {
             type: String
         },
+
         profileViedoUrl: {
             type: String
         },
-        roles: {
+
+        role: {
             default: RolesEnum.USER,
             type: Number
         },
+
+        salt: {
+            type: String
+        },
+        
         stateCode: {
             required: false,
+            type: String
+        },
+        // monthNumber: {
+        //     required: true,
+        //     type: Number
+        // }, 
+        user_name: {
             type: String
         },
         userId: {
@@ -115,17 +142,34 @@ const userSchema = new mongoose.Schema(
         verified: {
             default: "Pending",
             type: String
-        },
-        weekNumber: {
-            required: true,
-            type: Number
         }
+        // weekNumber: {
+        //     required: true,
+        //     type: Number
+        // }
     },
     {
         timestamps: true 
     }
 );
 
+async function passworEncryption(password, salt){
+    const loginKey = basicConfigurationObject.PASSWORD_SECRET_KEY;
+
+    if (!loginKey) return CommonMessage.LOGIN_KEY_MISSING;
+
+    const passwordHashed = await CryptoJS.HmacSHA256(password + salt, loginKey).toString();
+
+    return passwordHashed;
+}
+
+userSchema.pre("save", async function(next){
+    if (!this.isModified("password")) return next();
+    
+    this.salt = uid.stamp(32);
+
+    this.password = await passworEncryption(this.password, this.salt);
+});
 const User = mongoose.model("user", userSchema);
 
-export default User;
+module.exports = User;
