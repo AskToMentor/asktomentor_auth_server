@@ -24,5 +24,7 @@ RUN openssl genrsa -out private.key 4096 && \
 # Expose the port your application will run on
 EXPOSE 6000
 
+RUN node script/generateEnv.js
+
 # Command to run your application
 CMD ["npm", "start"]
